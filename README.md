@@ -1,0 +1,1 @@
+# centering-window-mode
