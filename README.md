@@ -19,10 +19,12 @@ This does the same thing as [centered-window-mode](https://github.com/anler/cent
 
 ## How to use it
 
-Run these elisp command (or put them in your .emacs)
+Run these elisp commands (or put them in your .emacs)
+
+
 
 ```lisp
-(load " ... /centering-window-mode.el")
+(load "<path-to-file>/centering-window-mode.el")
 (centering-window-mode)
 ```
 
