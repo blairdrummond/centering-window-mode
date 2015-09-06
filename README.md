@@ -22,9 +22,20 @@ This does the same thing as [centered-window-mode](https://github.com/anler/cent
 Run these elisp command (or put them in your .emacs)
 
 ```(load " ... /centering-window-mode.el")
+
 (centering-window-mode)```
 
 **M-x** centering-window-mode
+
 **M-x** centering-override-center
+
 **M-x** centering-override-no-center
+
 **M-x** centering-override-default
+
+
+
+## Screenshots
+
+![](screenshots/Screenshot_2015-09-05_22-18-25.png)
+![](screenshots/Screenshot_2015-09-05_22-21-28.png)
