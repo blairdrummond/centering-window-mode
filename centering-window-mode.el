@@ -3,115 +3,94 @@
 ;; http://alexkehayias.tumblr.com/post/98888273308/simple-centered-text-mode-in-emacs
 
 
-;; This is used While in centered mode, because windows drop
-;; out of centered mode in splitscreen
-(setq stay-centered nil)
-
-;; https://github.com/emacs-mirror/emacs/blob/master/lisp/scroll-all.el
-(defun one-function-for-all (func)
-  "Apply function FUNC to all visible windows."
-  (let ((num-windows (count-windows))
-	(count 1))
-    (when (> num-windows 1)
-      (other-window 1)
-      (while (< count num-windows)
-	(condition-case nil
-	    (funcall func)
-	  ;; Ignore beginning- or end-of-buffer error in other windows.
-	  (error nil)
-	  )
-	(other-window 1)
-	(setq count (1+ count))))))
+;; Remove minibuffer from window-list
+(defun list-windows () (window-list (selected-frame) -1))
 
 
-;; center text
-(defun center-text ()
-  "Center the text in the middle of the buffer. Works best in full screen"
-  (interactive)
-  (progn
-    (let ((left     (car (window-margins)))
-	  (right    (cdr (window-margins)))
-	  (left-to  (/   (window-width) 4))
-	  (right-to (/   (window-width) 4)))
-
-      (unless (and left (>= left left-to) right (>= right right-to))
-	(set-window-margins
-	 (car (get-buffer-window-list (current-buffer) nil t))
-	 (/ (window-width) 4)
-	 (/ (window-width) 4)))
-      (setq stay-centered t))))
+;; center a window
+(defun center-text (arg)
+  "Center the text in the middle of the buffer. Works best in full screens"
+  (let ((left     (car (window-margins     arg)))
+	(right    (cdr (window-margins     arg)))
+	(left-to  (/   (window-total-width arg) 4))
+	(right-to (/   (window-total-width arg) 4)))
+    (unless (and left (>= left left-to) right (>= right right-to))
+      (set-window-margins arg left-to right-to))))
 
 
 
-;; remove centering
-(defun center-text-clear ()
-  (interactive)
-  (progn
-    (set-window-margins
-     (car (get-buffer-window-list (current-buffer) nil t))
-     nil
-     nil)
-    (setq stay-centered nil)))
+;; remove centering from window
+(defun center-text-clear (arg)
+  (set-window-margins arg nil nil))
 
 
 
-;; toggle
-(defun centering-toggle ()
-  (interactive)
-  (let ((left     (car  (window-margins)))
-	(right    (cdr  (window-margins))))
-    (if (or left right (and left (< 0 left)) (and right (< 0 right)))
-	(center-text-clear)
-      (center-text))))
-
-
-
-;; Add hooks to detect changes
-(defun cwm/setup ()
+;; Add hooks to detect changes on all windows
+(defun centering-setup ()
   (add-hook
    'window-configuration-change-hook
-   'cwm/window-configuration-change)
-  (cwm/window-configuration-change))
+   'centering-window-configuration-change)
+  (centering-window-configuration-change))
 
 
 
 ;; Remove hooks
-(defun cwm/teardown ()
-  (progn
-    (one-function-for-all 'center-text-clear)
+(defun centering-teardown ()
+    (mapcar 'center-text-clear (list-windows))
     (remove-hook
      'window-configuration-change-hook
-     'cwm/window-configuration-change)))
-
-
-
-;; Remove centering on right-split
-(defadvice split-window-right
-    (before cwm/reset-on-split activate)
-  (center-text-clear))
+     'centering-window-configuration-change))
 
 
 
 ;; autodetect what to do
-(defun cwm/window-configuration-change ()
-  (if (or stay-centered (< (length (window-list)) 2))
-      (center-text)
-    (center-text-clear)))
+(defun centering-window-configuration-change ()
+  (mapcar 'choose (list-windows)))
 
+
+;; Manually override the settings for a window
+(set-default 'override nil)
+(defun choose (arg)
+  (let ((user-overridden (buffer-local-value 'override (window-buffer arg)))
+	(good (window-full-width-p arg)))
+  (cond
+   ((eq user-overridden  1)  (center-text       arg)) ;; Defaults centered
+   ((eq user-overridden -1)  (center-text-clear arg)) ;; Defaults not centered
+   (good                     (center-text       arg))
+   ((not good)               (center-text-clear arg)))))
+
+
+;; the following 3 set the behaviour of a window
+(defun centering-override-center ()
+  (interactive)
+  (setq-local override 1)
+  (centering-window-configuration-change))
+
+(defun centering-override-no-center ()
+  (interactive)
+  (setq-local override -1)
+  (centering-window-configuration-change))
+
+(defun centering-override-default ()
+  (interactive)
+  (setq-local override nil)
+  (centering-window-configuration-change))
 
 
 ;;;###autoload
 (setq has-been-set nil)
-(define-minor-mode my-centered-window-mode
+(define-minor-mode centering-window-mode
   (if has-been-set
       (progn
-	(center-text-clear)
-	(cwm/teardown)
+	(centering-teardown)
 	(setq has-been-set nil))
     (progn
-      (cwm/setup)
+      (centering-setup)
       (setq has-been-set t))))
 
 
+
 (provide 'centering-window-mode)
-(provide 'centering-toggle)
+(provide 'centering-override-center)
+(provide 'centering-override-no-center)
+(provide 'centering-override-default)
