@@ -30,16 +30,21 @@
   (add-hook
    'window-configuration-change-hook
    'centering-window-configuration-change)
+  (when (require 'nlinum nil 'noerror)
+    (defadvice nlinum--flush (around flush-after activate)
+      (ad-do-it)
+      (centering-window-configuration-change)))
   (centering-window-configuration-change))
-
 
 
 ;; Remove hooks
 (defun centering-teardown ()
-    (mapcar 'center-text-clear (list-windows))
-    (remove-hook
-     'window-configuration-change-hook
-     'centering-window-configuration-change))
+  (mapcar 'center-text-clear (list-windows))
+  (remove-hook
+   'window-configuration-change-hook
+   'centering-window-configuration-change)
+  (when (require 'nlinum nil 'noerror)
+      (ad-unadvise 'nlinum--flush)))
 
 
 
