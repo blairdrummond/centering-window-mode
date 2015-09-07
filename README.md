@@ -18,6 +18,8 @@ This does the same thing as [centered-window-mode](https://github.com/anler/cent
 
 ## Bad things
 
+- nlinum support isn't quite right yet... It isn't persistent... (will fix this)
+
 - Can't track *all* changes in window configuration. transpose-frame doesn't seem to send the notification that it needs to update for instance. So you need to make some other window change for it to update to good settings.
 
 - No Fringe. So if you like the other colours in the fringe... you won't find that here...
